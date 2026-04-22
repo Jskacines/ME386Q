@@ -9,3 +9,17 @@ truss = generate_truss(nodal_geometry, N_subdivisions, false);
 
 plot_elements(mesh)
 plot_elements(truss)
+
+nodal_geometry.thickness = .1; % m
+nodal_geometry.E = 10e6; % Pa
+nodal_geometry.A = .1; % m 
+nodal_geometry.v = .1; % poisson's ratio 
+
+
+element_nodes = mesh.local_nodes;
+global_nodes = mesh.global_nodes;
+
+
+N = size(nodal_geometry.nodes);
+
+K = K_matrix(nodal_geometry, "triangular", mesh);

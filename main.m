@@ -17,9 +17,10 @@ nodal_geometry.v = .1; % poisson's ratio
 
 
 element_nodes = mesh.local_nodes;
-global_nodes = mesh.global_nodes;
+global_nodes = mesh.global_nodes
 
 
 N = size(nodal_geometry.nodes);
 
-K = K_matrix(nodal_geometry, "triangular", mesh);
+Klin1D = K_matrix(nodal_geometry, "linear_1D",truss);
+Ktri = K_matrix(nodal_geometry,"triangular",mesh);

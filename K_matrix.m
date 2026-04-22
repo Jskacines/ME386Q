@@ -8,45 +8,85 @@ function K_matrix = K_matrix(nodal_geometry, element_type,mesh)
         K_matrix = Ktri_global(mesh,nodal_geometry);
 
     elseif element_type == "linear_1D"
-        K_matrix = Klin1D(N,nodal_geometry.E,nodal_geometry.A);
-    elseif element_type == "linear2D"
-        K_matrix = Klin2D(N,nodal_geometry.E,nodal_geometry.A);
-    elseif element_type == "quadratic"
-        K_matrix = Kquad(N,nodal_geometry.E,nodal_geometry.A);
+        K_matrix = Klin1D_global(mesh,nodal_geometry);
+    % elseif element_type == "linear2D"
+    %     K_matrix = Klin2D(N,nodal_geometry.E,nodal_geometry.A);
+    % elseif element_type == "quadratic"
+    %     K_matrix = Kquad(N,nodal_geometry.E,nodal_geometry.A);
     else 
         fprintf("Unsupported element type")
     end
 
 end
 
-function K_linear = Klin1D(N,E,A)
+function K_linear = Klin1D(E,A,element_nodes)
 
-    K_linear(1,1) = 1; 
-    K_linear(1,2) = -1; 
-    K_linear(N,N) = 1; 
-    K_linear(N,N-1) = -1; 
+    % element_nodes = [x1 y1; x2 y2]
+
+    x1 = element_nodes(1,1);
+    y1 = element_nodes(1,2);
+    x2 = element_nodes(2,1);
+    y2 = element_nodes(2,2);
+
+    L = sqrt((x2-x1)^2 + (y2-y1)^2);
+    c = (x2-x1)/L;
+    s = (y2-y1)/L;
+
+    K_linear = (E*A/L) * ...
+        [ c^2   c*s   -c^2   -c*s
+          c*s   s^2   -c*s   -s^2
+         -c^2  -c*s    c^2    c*s
+         -c*s  -s^2    c*s    s^2 ];
+
+end
+
+function K_global = Klin1D_global(mesh,nodal_geometry)
+    nnode = 2; % line has 2 nodes 
+    E = nodal_geometry.E;
+    A = nodal_geometry.A;
     
-    c = 0;
-    
-    for i = 2:N-1
-        for j = 2:N-1
-    
-            K_linear(i,j-1+c) = E*A/N * -1;
-            K_linear(i,j+c) = E*A/N * 2;
-            K_linear(i,j+1+c) = E*A/N * -1;
-    
-            c = c+1;
-            break
-        end
+    all_global_nodes = [];
+    for e = 1:length(mesh)
+        all_global_nodes = [all_global_nodes, mesh(e).global_nodes];
     end
+    num_nodes = max(all_global_nodes);
 
+    K_global = zeros(2*num_nodes, 2*num_nodes);
+    
+    for e = 1:length(mesh)
+
+        % element geometry
+        element_nodes = mesh(e).local_nodes;
+    
+        % element stiffness
+        K_1D = Klin1D(E,A,element_nodes);
+    
+        % node connectivity
+        nnode = size(element_nodes,1);
+        global_conn = zeros(1,nnode);
+    
+        for i = 1:nnode
+            coord = element_nodes(i,:);
+            global_conn(i) = mesh(e).local_to_global({coord});
+        end
+    
+        % DOF connectivity
+        edof = zeros(1,2*nnode);
+        for i = 1:nnode
+            n = global_conn(i);
+            edof(2*i-1:2*i) = [2*n-1, 2*n];
+        end
+    
+        % global assembly
+        K_global(edof,edof) = K_global(edof,edof) + K_1D;
+    end
 end
 
-function K_linear = Klin2D(N,E,A)
-
-    K_linear = NaN;
-
-end
+% function K_linear = Klin2D(N,E,A)
+% 
+%     K_linear = NaN;
+% 
+% end
 
 % function K_quad = Kquad(N,E,A)
 % 

@@ -1,6 +1,9 @@
 function mesh = generate_mesh(nodal_geometry, element_type, do_plots)
     if do_plots
+        figure()
         scatter(nodal_geometry.nodes(:,1), nodal_geometry.nodes(:,2))
+        axis padded
+        axis equal
     end
     if nodal_geometry.type == "regular_grid"
         if element_type == "triangular"

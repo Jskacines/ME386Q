@@ -30,6 +30,8 @@ function mesh = regular_tri_mesh(nodes)
     N_elems = (N_x-1)*(N_y-1)*2;
     elem_struct = struct('element_type', cell(N_elems,1), 'local_nodes', cell(N_elems,1), 'global_nodes', cell(N_elems,1));
     [elem_struct.element_type] = deal('tri');
+    [elem_struct.local_to_global] = deal(global_node_dict);
+    [elem_struct.global_to_local] = deal(dictionary(vals, keys));
     k = 1;
     for i = 1:(N_x-1)
         for j = 1:(N_y-1)
@@ -43,8 +45,8 @@ function mesh = regular_tri_mesh(nodes)
 
             nodes = [
                     squeeze(node_grid(i+1,j+1,:))';
-                    squeeze(node_grid(i+1,j,:))';
-                    squeeze(node_grid(i,j+1,:))'
+                    squeeze(node_grid(i,j+1,:))';
+                    squeeze(node_grid(i+1,j,:))'
                     ];
             elem_struct(k+1).local_nodes = [nodes(1,:);nodes(2,:);nodes(3,:)];
             elem_struct(k+1).global_nodes = global_node_dict({nodes(1,:),nodes(2,:),nodes(3,:)});

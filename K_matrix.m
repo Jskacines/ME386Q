@@ -1,14 +1,12 @@
-function K_matrix = K_matrix(N, nodal_geometry, element_type,mesh)
+function K_matrix = K_matrix(nodal_geometry, element_type,mesh)
 
     % N is number of nodes 
     
     %% Building global stiffness matrix 
-    
-    if element_type == "triangular" K_matrix = zeros(8,8); end
-    
-  
+
     if element_type == "triangular"
-        K_matrix = K_matrix + Ktri(nodal_geometry.E,nodal_geometry.thickness,nodal_geometry.v, mesh);
+        K_matrix = Ktri_global(mesh,nodal_geometry);
+
     elseif element_type == "linear_1D"
         K_matrix = Klin1D(N,nodal_geometry.E,nodal_geometry.A);
     elseif element_type == "linear2D"
@@ -50,29 +48,60 @@ function K_linear = Klin2D(N,E,A)
 
 end
 
-function K_quad = Kquad(N,E,A)
-
-    K_quad = NaN;
-
-end
+% function K_quad = Kquad(N,E,A)
+% 
+%     K_quad = NaN;
+% 
+% end
 
 function K_tri = Ktri(E,t,v, element_nodes) % element thickness is t 
-    
+
     D_mat = D_matrix(E,v);
     A = 1/2 * (element_nodes(1,1) * (element_nodes(2,2)-element_nodes(3,2)) + element_nodes(2,1) * (element_nodes(3,2)-element_nodes(1,2)) + element_nodes(3,1) * (element_nodes(1,2) - element_nodes(2,2)));
     B_mat = B_matrix(A,element_nodes);
     % local stiffness matrix 
     K_tri = t * A * transpose(B_mat) * D_mat *B_mat;
-    for i = 1:8
-        for j = 1:8
-            if mesh(i).global_nodes == mesh(i).local_nodes
-                
-            end
-        end
-    end
 
 end
 
+function K_global = Ktri_global(mesh,nodal_geometry)
+    
+    nnode = 3; % triangle has 3 nodes 
+    E = nodal_geometry.E;
+    t = nodal_geometry.thickness;
+    v = nodal_geometry.v;
+
+    num_nodes = size(nodal_geometry.nodes,1);
+    K_global = zeros(2*num_nodes, 2*num_nodes);
+    
+    for e = 1:length(mesh)
+
+        % element geometry
+        element_nodes = mesh(e).local_nodes;
+    
+        % element stiffness
+        K_tri = Ktri(E,t,v,element_nodes);
+    
+        % node connectivity
+        nnode = size(element_nodes,1);
+        global_conn = zeros(1,nnode);
+    
+        for i = 1:nnode
+            coord = element_nodes(i,:);
+            global_conn(i) = mesh(e).local_to_global({coord});
+        end
+    
+        % DOF connectivity
+        edof = zeros(1,2*nnode);
+        for i = 1:nnode
+            n = global_conn(i);
+            edof(2*i-1:2*i) = [2*n-1, 2*n];
+        end
+    
+        % global assembly
+        K_global(edof,edof) = K_global(edof,edof) + K_tri;
+    end
+end
 
 function B_matrix = B_matrix(A,element_nodes)
     beta1 = element_nodes(2,2) - element_nodes(3,2); % where x coords are column 1, y coords are column 2 

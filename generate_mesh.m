@@ -38,11 +38,16 @@ function mesh = regular_tri_mesh(nodes)
                     squeeze(node_grid(i+1,j,:))';
                     squeeze(node_grid(i,j+1,:))'
                     ];
-            disp(size(nodes))
-            % nodes = num2cell(nodes,1);
             elem_struct(k).local_nodes = [nodes(1,:);nodes(2,:);nodes(3,:)];
-            % disp(global_node_dict)
             elem_struct(k).global_nodes = global_node_dict({nodes(1,:),nodes(2,:),nodes(3,:)});
+
+            nodes = [
+                    squeeze(node_grid(i+1,j+1,:))';
+                    squeeze(node_grid(i+1,j,:))';
+                    squeeze(node_grid(i,j+1,:))'
+                    ];
+            elem_struct(k+1).local_nodes = [nodes(1,:);nodes(2,:);nodes(3,:)];
+            elem_struct(k+1).global_nodes = global_node_dict({nodes(1,:),nodes(2,:),nodes(3,:)});
             k = k + 2;
         end
     end

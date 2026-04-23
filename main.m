@@ -68,6 +68,7 @@ mesh = compute_deformations(mesh,utri);
 % plot_displacement(mesh,1);
 plot_displacement_and_force(mesh,10,Ftri,Rtri,1e-3);
 
-% truss = compute_deformations(truss,ulin1D);
-% plot_displacement(truss,1e3);
+truss = compute_deformations(truss,ulin1D);
+plot_displacement(truss,250);
+plot_displacement_and_force(truss,250,F1D,Rlin1D,1e-3)
 

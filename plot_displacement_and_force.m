@@ -1,5 +1,10 @@
 function plot_displacement_and_force(elem_struct,scale_factor,F,R,F_scale)
     N_elems = numel(elem_struct);
+    if elem_struct(1).element_type == "beam"
+        N_dof = 3;
+    elseif elem_struct(1).element_type == "tri"
+        N_dof = 2;
+    end
     figure()
     hold on
     color1 = [0,0,1];
@@ -42,10 +47,11 @@ function plot_displacement_and_force(elem_struct,scale_factor,F,R,F_scale)
         % alpha(0.3)
     end
     global_to_local = elem_struct.global_to_local;
+
     % Force and reaction quiver
-    F_array = reshape(F,[2,numel(F)/2])';
-    R_array = reshape(R,[2,numel(R)/2])';
-    for i = 1:numel(F)/2
+    F_array = reshape(F,[N_dof,numel(F)/N_dof])';
+    R_array = reshape(R,[N_dof,numel(R)/N_dof])';
+    for i = 1:numel(F)/N_dof
         f = F_array(i,:);
         r = R_array(i,:);
         if ~isequal(f,[0,0])

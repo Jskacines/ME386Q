@@ -54,17 +54,16 @@ Ktri = K_matrix(nodal_geometry,"triangular",mesh);
 % Ku = F 
 
 utri = zeros(ndof_tri,1);
-utri(free_dofs_tri) = Ktri(free_dofs_tri, free_dofs_tri) \ Ftri(free_dofs_tri)
-Rtri = Ktri*utri - Ftri
+utri(free_dofs_tri) = Ktri(free_dofs_tri, free_dofs_tri) \ Ftri(free_dofs_tri);
+Rtri = Ktri*utri - Ftri;
 
-%% Solve Uf * Kff = Pf & R + F = K*u for linear 1D elements
-size(Klin1D)
-size(F1D)
-ulin1D = zeros(ndof_1D,1);
-ulin1D(free_dofs_1D) = Klin1D(free_dofs_1D, free_dofs_1D) \ F1D(free_dofs_1D)
-size(ulin1D)
-Rlin1D = Klin1D*ulin1D - F1D
-
+%% Solve Uf * Kff = Pf & R + F = K*u for triangular elements
+size(Klin1D);
+size(F1D);
+ulin1D = zeros(ndof_lin,1);
+ulin1D(free_dofs_lin) = Klin1D(free_dofs_lin, free_dofs_lin) \ F1D(free_dofs_lin);
+size(ulin1D);
+Rlin1D = Klin1D*ulin1D - F1D;
 
 mesh = compute_deformations(mesh,utri);
 plot_displacement(mesh,1);
@@ -72,3 +71,4 @@ plot_displacement(mesh,10);
 
 truss = compute_deformations(truss,ulin1D);
 plot_displacement(truss,1e3);
+

@@ -1,7 +1,7 @@
 function plot_displacement_and_force(elem_struct,scale_factor,F,R,F_scale)
     N_elems = numel(elem_struct);
     if elem_struct(1).element_type == "beam"
-        N_dof = 3;
+        N_dof = 2;
     elseif elem_struct(1).element_type == "tri"
         N_dof = 2;
     end

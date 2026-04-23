@@ -9,7 +9,6 @@ function elem_struct = compute_deformations(elem_struct, u)
     for i = 1:N_elems
         elem = elem_struct(i);
         node_deformations = zeros(size(elem.local_nodes,1),2);
-        disp(size(elem.local_nodes));
         for j = 1:size(elem.local_nodes,1)
             global_idx = elem.global_nodes(j);
             node_deformations(j,:) = u_array(global_idx, 1:2);

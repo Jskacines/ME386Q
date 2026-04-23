@@ -37,6 +37,8 @@ Fquad1D = Load_v(loads_1D,truss,"quadratic_1D")
 fixed_dofs_1D = [1 2 3 4]; % 1 = 1x, 2 = 1y,3 = 1rot, 4 = 2x,5 = 2y, 6 = 2rot
 fixed_dofs_quad1D = [1 2 3 4];
 fixed_dofs_tri = [1 2 3 4 5 6];
+fixed_dofs_tri = [1 2 3 4];
+
 
 % triangular 
 ndof_tri = length(Ftri);

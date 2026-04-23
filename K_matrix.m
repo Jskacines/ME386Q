@@ -19,7 +19,7 @@ function K_matrix = K_matrix(nodal_geometry, element_type,mesh)
 
 end
 
-function K_linear = Klin1D(E,A,I,element_nodes)
+function K_linear = Klin1D(E,A,element_nodes)
 
     % element_nodes = [x1 y1; x2 y2]
 
@@ -29,30 +29,19 @@ function K_linear = Klin1D(E,A,I,element_nodes)
     y2 = element_nodes(2,2);
 
     L = sqrt((x2-x1)^2 + (y2-y1)^2);
+
+    if L == 0
+        error('Zero-length truss element detected.');
+    end
+
     c = (x2-x1)/L;
     s = (y2-y1)/L;
 
-    % Local stiffness
-    k = [
-        E*A/L, 0, 0, -E*A/L, 0, 0;
-        0, 12*E*I/L^3, 6*E*I/L^2, 0, -12*E*I/L^3, 6*E*I/L^2;
-        0, 6*E*I/L^2, 4*E*I/L, 0, -6*E*I/L^2, 2*E*I/L;
-        -E*A/L, 0, 0, E*A/L, 0, 0;
-        0, -12*E*I/L^3, -6*E*I/L^2, 0, 12*E*I/L^3, -6*E*I/L^2;
-        0, 6*E*I/L^2, 2*E*I/L, 0, -6*E*I/L^2, 4*E*I/L
-    ];
-
-    % Transformation matrix
-    T = [
-        c  s  0  0  0  0;
-       -s  c  0  0  0  0;
-        0  0  1  0  0  0;
-        0  0  0  c  s  0;
-        0  0  0 -s  c  0;
-        0  0  0  0  0  1
-    ];
-
-    K_linear = T' * k * T;
+    K_linear = (E*A/L) * ...
+        [ c^2   c*s   -c^2   -c*s
+          c*s   s^2   -c*s   -s^2
+         -c^2  -c*s    c^2    c*s
+         -c*s  -s^2    c*s    s^2 ];
 
 end
 
@@ -60,7 +49,6 @@ function K_global = Klin1D_global(mesh,nodal_geometry)
     % nnode = 2; % line has 2 nodes 
     E = nodal_geometry.E;
     A = nodal_geometry.A;
-    I = nodal_geometry.I;
 
     all_global_nodes = [];
     for e = 1:length(mesh)
@@ -68,34 +56,27 @@ function K_global = Klin1D_global(mesh,nodal_geometry)
     end
     num_nodes = max(all_global_nodes);
 
-    K_global = zeros(3*num_nodes, 3*num_nodes);
-    
+    K_global = zeros(2*num_nodes, 2*num_nodes);
+
     for e = 1:length(mesh)
 
         % element geometry
         element_nodes = mesh(e).local_nodes;
-    
-        % element stiffness
-        K_1D = Klin1D(E,A,I,element_nodes);
-    
-        % node connectivity
-        nnode = size(element_nodes,1);
-        global_conn = zeros(1,nnode);
-    
-        for i = 1:nnode
-            coord = element_nodes(i,:);
-            global_conn(i) = mesh(e).local_to_global({coord});
-        end
 
+        % element stiffness
+        K_1D = Klin1D(E,A,element_nodes);
+
+        % node connectivity
+        global_conn = mesh(e).global_nodes;
         n1 = global_conn(1);
         n2 = global_conn(2);
 
-        % DOF connectivity
+        % DOF connectivity: [u1 v1 u2 v2]
         edof = [
-            3*n1-2, 3*n1-1, 3*n1,
-            3*n2-2, 3*n2-1, 3*n2
+            2*n1-1, 2*n1, ...
+            2*n2-1, 2*n2
         ];
-    
+
         % global assembly
         K_global(edof,edof) = K_global(edof,edof) + K_1D;
     end
@@ -109,23 +90,63 @@ function K_quadratic_1D = Kquad1D(E,A,element_nodes)
     y3 = element_nodes(3,2);
 
     L = sqrt((x3-x1)^2 + (y3-y1)^2);
+
+    if L == 0
+        error('Zero-length element detected.');
+    end
+
     c = (x3-x1)/L;
     s = (y3-y1)/L;
 
-    K_quadratic_1D = (E*A/(3*L)) * ...
-        [ 7*c^2,   7*c*s,  -8*c^2,  -8*c*s,   c^2,    c*s;
-          7*c*s,   7*s^2,  -8*c*s,  -8*s^2,   c*s,    s^2;
-         -8*c^2,  -8*c*s,  16*c^2,  16*c*s,  -8*c^2, -8*c*s;
-         -8*c*s,  -8*s^2,  16*c*s,  16*s^2,  -8*c*s, -8*s^2;
-           c^2,     c*s,   -8*c^2,  -8*c*s,   7*c^2,  7*c*s;
-           c*s,     s^2,   -8*c*s,  -8*s^2,   7*c*s,  7*s^2 ];
+    % Axial stiffness block (quadratic bar)
+    Ka = (E*A/(3*L)) * ...
+        [ 7  -8   1;
+         -8  16  -8;
+          1  -8   7 ];
 
+    % Bending stiffness block (quadratic Euler-Bernoulli beam)
+    Kb = (E*I/(35*L^3)) * ...
+        [ 5092,    1138*L,  -3584,    1920*L,  -1508,    242*L;
+          1138*L,   332*L^2, -896*L,   320*L^2, -242*L,    38*L^2;
+         -3584,    -896*L,   7168,    0,       -3584,    896*L;
+          1920*L,   320*L^2, 0,       1280*L^2,-1920*L,   320*L^2;
+         -1508,    -242*L,  -3584,   -1920*L,   5092,   -1138*L;
+           242*L,    38*L^2, 896*L,    320*L^2,-1138*L,   332*L^2 ];
+
+    % Local 9x9 stiffness matrix
+    k = zeros(9,9);
+
+    % Axial DOFs: [u1 u2 u3] -> positions [1 4 7]
+    axial = [1 4 7];
+    k(axial, axial) = Ka;
+
+    % Bending DOFs: [v1 th1 v2 th2 v3 th3] -> positions [2 3 5 6 8 9]
+    bend = [2 3 5 6 8 9];
+    k(bend, bend) = Kb;
+
+    % Transformation matrix
+    T = [
+         c  s  0   0  0  0   0  0  0;
+        -s  c  0   0  0  0   0  0  0;
+         0  0  1   0  0  0   0  0  0;
+         0  0  0   c  s  0   0  0  0;
+         0  0  0  -s  c  0   0  0  0;
+         0  0  0   0  0  1   0  0  0;
+         0  0  0   0  0  0   c  s  0;
+         0  0  0   0  0  0  -s  c  0;
+         0  0  0   0  0  0   0  0  1
+    ];
+
+    K_quadratic_1D = T' * k * T;
 end
 
 function K_global = Kquad1D_global(mesh,nodal_geometry)
-    nnode = 2; % line has 2 nodes 
+
+    % nnode = 2; % line has 2 nodes
+
     E = nodal_geometry.E;
     A = nodal_geometry.A;
+    I = nodal_geometry.I;
 
     all_global_nodes = [];
     for e = 1:length(mesh)

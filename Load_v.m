@@ -21,9 +21,15 @@ function F = Load_v(loads,mesh,element_type)
         node = loads(i,1);
         Fx   = loads(i,2);
         Fy   = loads(i,3);
-
-        F(nnode*node-1) = F(nnode*node-1) + Fx;
-        F(nnode*node)   = F(nnode*node)   + Fy;
+        if element_type == "triangular"
+            F(nnode*node-1) = F(nnode*node-1) + Fx;
+            F(nnode*node)   = F(nnode*node)   + Fy;
+        else
+            Mz = loads(i,4);   % nodal moment
+            F(3*node-2) = F(3*node-2) + Fx;
+            F(3*node-1) = F(3*node-1) + Fy;
+            F(3*node)   = F(3*node)   + Mz;
+        end
     end
 
 end

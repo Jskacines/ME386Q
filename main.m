@@ -20,25 +20,29 @@ nodal_geometry.v = .1; % poisson's ratio
 
 %% Set loads 
 % [node_number magnitude_x magnitude_y]
-loads = [
+loads_tri = [
     6   0   -1000
     5 200      0
     ];
-Ftri = Load_v(loads,mesh,"triangular"); % need to change between mesh/truss depending on what it is
-F1D = Load_v(loads,truss, "linear_1D");
+
+loads_1D = [
+    21   0   -1000
+    ];
+Ftri = Load_v(loads_tri,mesh,"triangular"); % need to change between mesh/truss depending on what it is
+F1D = Load_v(loads_1D,truss, "linear_1D");
 
 %% Set boundary conditions
-fixed_dofs = [1 2 3 4 5 6]; % 1 = 1x, 2 = 1y,3 = 1rot, 4 = 2x,5 = 2y, 6 = 2rot
-
+fixed_dofs_1D = [1 2 3 4 5 6 7 8 9]; % 1 = 1x, 2 = 1y,3 = 1rot, 4 = 2x,5 = 2y, 6 = 2rot
+fixed_dofs_tri = [1 2 3 4 5 6];
 % triangular 
 ndof_tri = length(Ftri);
 all_dofs = 1:ndof_tri;
-free_dofs_tri = setdiff(all_dofs, fixed_dofs);
+free_dofs_tri = setdiff(all_dofs, fixed_dofs_tri);
 
 % linear
-ndof_lin = length(F1D);
-all_dofs = 1:ndof_lin;
-free_dofs_lin = setdiff(all_dofs, fixed_dofs);
+ndof_1D = length(F1D);
+all_dofs = 1:ndof_1D;
+free_dofs_1D = setdiff(all_dofs, fixed_dofs_1D);
 
 %% Stiffness matrices
 Klin1D = K_matrix(nodal_geometry, "linear_1D",truss);
@@ -53,10 +57,18 @@ utri = zeros(ndof_tri,1);
 utri(free_dofs_tri) = Ktri(free_dofs_tri, free_dofs_tri) \ Ftri(free_dofs_tri)
 Rtri = Ktri*utri - Ftri
 
-%% Solve Uf * Kff = Pf & R + F = K*u for triangular elements
+%% Solve Uf * Kff = Pf & R + F = K*u for linear 1D elements
 size(Klin1D)
 size(F1D)
-ulin1D = zeros(ndof_lin,1);
-ulin1D(free_dofs_lin) = Klin1D(free_dofs_lin, free_dofs_lin) \ F1D(free_dofs_lin)
+ulin1D = zeros(ndof_1D,1);
+ulin1D(free_dofs_1D) = Klin1D(free_dofs_1D, free_dofs_1D) \ F1D(free_dofs_1D)
 size(ulin1D)
 Rlin1D = Klin1D*ulin1D - F1D
+
+
+mesh = compute_deformations(mesh,utri);
+plot_displacement(mesh,1);
+plot_displacement(mesh,10);
+
+truss = compute_deformations(truss,ulin1D);
+plot_displacement(truss,1e3);

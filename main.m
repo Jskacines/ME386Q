@@ -6,7 +6,7 @@ mesh = generate_mesh(nodal_geometry,"triangular",false);
 
 nodal_geometry.connections = [[1,2];[1,3];[2,3];[2,4];[3,4];[2,5];[4,5];[4,6];[5,6]];
 
-N_subdivisions = 2;
+N_subdivisions = 0;
 truss = generate_truss(nodal_geometry, N_subdivisions, false);
 
 plot_elements(mesh)
@@ -26,7 +26,7 @@ loads_tri = [
     ];
 
 loads_1D = [
-    21   0   -1000 0
+    5   0   -1000 0
     ];
 Ftri = Load_v(loads_tri,mesh,"triangular"); % need to change between mesh/truss depending on what it is
 F1D = Load_v(loads_1D,truss, "linear_1D");
@@ -69,6 +69,6 @@ mesh = compute_deformations(mesh,utri);
 plot_displacement_and_force(mesh,10,Ftri,Rtri,1e-3);
 
 truss = compute_deformations(truss,ulin1D);
-plot_displacement(truss,250);
+plot_displacement(truss,20);
 plot_displacement_and_force(truss,250,F1D,Rlin1D,1e-3)
 

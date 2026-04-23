@@ -56,11 +56,11 @@ function plot_displacement_and_force(elem_struct,scale_factor,F,R,F_scale)
         r = R_array(i,:);
         if ~isequal(f,[0,0])
         pos = global_to_local{i};
-        quiver(pos(1),pos(2),f(1)*F_scale,f(2)*F_scale,"Color","r")
+        quiver(pos(1),pos(2),f(1)*F_scale,f(2)*F_scale,"Color","r","LineWidth",2,"MaxHeadSize",5)
         end
         if ~isequal(r,[0,0])
         pos = global_to_local{i};
-        quiver(pos(1),pos(2),r(1)*F_scale,r(2)*F_scale,"Color","b")
+        quiver(pos(1),pos(2),r(1)*F_scale,r(2)*F_scale,"Color","m","LineWidth",2,"MaxHeadSize",5)
         end
     end
     hold off

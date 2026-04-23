@@ -22,7 +22,7 @@ function truss = generate_truss(nodal_geometry, N_subdivisions, do_plots)
     [elem_struct.global_to_local] = deal(dictionary(vals, keys));
     for k = 1:N_elems
         idx = conn(k,:);
-        elem_struct(k).local_nodes = [nodes(idx(1),:);nodes(idx(2),:)];
+        elem_struct(k).local_nodes = [nodes(idx(1),:); nodes(idx(2),:)];
         elem_struct(k).global_nodes = global_node_dict({nodes(idx(1),:),nodes(idx(2),:)});
     end
     truss = elem_struct;

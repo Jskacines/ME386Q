@@ -39,6 +39,7 @@ ndof_tri = length(Ftri);
 all_dofs = 1:ndof_tri;
 free_dofs_tri = setdiff(all_dofs, fixed_dofs_tri);
 
+
 % linear
 ndof_1D = length(F1D);
 all_dofs = 1:ndof_1D;
@@ -64,9 +65,9 @@ ulin1D(free_dofs_1D) = Klin1D(free_dofs_1D, free_dofs_1D) \ F1D(free_dofs_1D)
 Rlin1D = Klin1D*ulin1D - F1D
 
 mesh = compute_deformations(mesh,utri);
-plot_displacement(mesh,1);
-plot_displacement(mesh,10);
+% plot_displacement(mesh,1);
+plot_displacement_and_force(mesh,10,Ftri,Rtri,1e-3);
 
-truss = compute_deformations(truss,ulin1D);
-plot_displacement(truss,1e3);
+% truss = compute_deformations(truss,ulin1D);
+% plot_displacement(truss,1e3);
 
